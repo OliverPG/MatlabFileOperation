@@ -3,9 +3,10 @@ recycle('on');
 global	index index1 index2 name1 name2
 global  n1 n2 longName1 longName2 indexList fileOb workDir
 global flagPic1 flagPic2 flagSave flagDel1 flagDel2 flagClose
+global flagRd1 flagRd2
 flagClose=0;
-workDir='E:\0_Program\Python\WebDo\nm_nmcsym\';
-% workDir='E:\0_Program\Python\WebDo\t\';
+% workDir='E:\0_Program\Python\WebDo\nm_nmcsym\';
+workDir='E:\0_Program\Python\WebDo\t\';
 sType='jpg';
 [fileOb,flagOb]=hereFile(workDir,sType);
 [rOb,cOb]=size(fileOb);
@@ -45,14 +46,17 @@ while rL~=0 && flagClose==0
     hFig.Name=sprintf('length=%d',rL);
     subplot(1,2,1);h1=imshow(pic1);title(sname1);
     subplot(1,2,2);h2=imshow(pic2);title(sname2);
+    %Button pic
     h1.ButtonDownFcn={@showCallBack1};
     h2.ButtonDownFcn={@showCallBack2};
+    %Button Save
     hSave=uicontrol(hFig,'Style','pushbutton','string','SAVE');
     hSave.Callback={@saveIndexList};
     fPosition=get(gcf,'Position');
     wButton=60;hButton=20;
     xSaveB=fPosition(3)/10-wButton/2;ySaveB=fPosition(4)/13-hButton/2;
     hSave.Position=[xSaveB ySaveB wButton hButton];
+    %button Delete
     hDel1=uicontrol(hFig,'Style','pushbutton','string','DEL Left');
     hDel1.Callback={@deleteLeft};
     hDel2=uicontrol(hFig,'Style','pushbutton','string','DEL Right');
@@ -61,12 +65,22 @@ while rL~=0 && flagClose==0
     xDel2=fPosition(3)/3*2-wButton/2;yDel2=fPosition(4)/13-hButton/2;
     hDel1.Position=[xDel1 yDel1 wButton hButton];
     hDel2.Position=[xDel2 yDel2 wButton hButton];
+    %Button Close
     hClose=uicontrol(hFig,'Style','pushbutton','string','Close');
     hClose.Callback={@closePro};
     xClose=fPosition(3)/10*9-wButton/2;yClose=fPosition(4)/13-hButton/2;
     hClose.Position=[xClose yClose wButton hButton];
-    flagPic1=0;flagPic2=0;flagSave=0;flagDel1=0;flagDel2=0;
-    while ~(flagPic1||flagPic2||flagDel1||flagDel2||flagClose)
+    %Button Rd
+    hRd1=uicontrol(hFig,'Style','pushbutton','string','Rd Left');
+    hRd1.Callback={@rdLeft};
+    hRd2=uicontrol(hFig,'Style','pushbutton','string','Rd Right');
+    hRd2.Callback={@rdRight};
+    xRd1=fPosition(3)/3-wButton/2;yRd1=fPosition(4)/13-hButton/2*3;
+    xRd2=fPosition(3)/3*2-wButton/2;yRd2=fPosition(4)/13-hButton/2*3;
+    hRd1.Position=[xRd1 yRd1 wButton hButton];
+    hRd2.Position=[xRd2 yRd2 wButton hButton];
+    flagPic1=0;flagPic2=0;flagSave=0;flagDel1=0;flagDel2=0;flagRd1=0;flagRd2=0;
+    while ~(flagPic1||flagPic2||flagDel1||flagDel2||flagClose||flagRd1||flagRd2)
         drawnow;
     end
     [rL,cL]=size(indexList);
@@ -89,10 +103,8 @@ if n1>n2
     nameCache=fileOb(index1).name;
     fileOb(index1).name=fileOb(index2).name;
     fileOb(index2).name=nameCache;
-    indexCache1=find(indexList==index1);
-    indexCache2=find(indexList==index2);
-    indexList(indexCache1)=index2;
-    indexList(indexCache2)=index1;
+    indexList(indexList==index1)=index2;
+    indexList(indexList==index2)=index1;
 end
 indexList(index,:)=[];
 flagPic1=1;
@@ -112,10 +124,8 @@ if n2>n1
     nameCache=fileOb(index1).name;
     fileOb(index1).name=fileOb(index2).name;
     fileOb(index2).name=nameCache;
-    indexCache1=find(indexList==index1);
-    indexCache2=find(indexList==index2);
-    indexList(indexCache1)=index2;
-    indexList(indexCache2)=index1;
+    indexList(indexList==index1)=index2;
+    indexList(indexList==index2)=index1;
 end
 indexList(index,:)=[];
 flagPic2=1;
@@ -158,4 +168,48 @@ fprintf('\nSaving jpg.cmp ...')
 save([workDir,'jpg.cmp'],'indexList','-ascii');
 fprintf('\nSave jpg.cmp Done.\n');
 flagClose=1;
+end
+function rdLeft(~,~)
+global flagRd1
+global fileOb indexList index1
+folderName=fileOb(index1).folder;
+rmdir(folderName,'s');
+folderList={fileOb.folder};
+boolList=strcmp(folderList,folderName);
+rdIndex=find(boolList);
+fileOb(rdIndex)=[];
+for index=1:length(rdIndex)
+    [rIndex,~]=find(indexList(:,1)==rdIndex(index));
+    indexList(rIndex,:)=[];
+    [rIndex,~]=find(indexList(:,2)==rdIndex(index));
+    indexList(rIndex,:)=[];
+end
+oldIndex=setdiff(rdIndex(1):length(folderList),rdIndex);
+newIndex=rdIndex(1)-1+1:length(oldIndex);
+for index=1:length(oldIndex)
+    indexList(indexList==oldIndex(index))=newIndex(index);
+end
+flagRd1=1;
+end
+function rdRight(~,~)
+global flagRd2
+global fileOb indexList index2
+folderName=fileOb(index2).folder;
+rmdir(folderName,'s');
+folderList={fileOb.folder};
+boolList=strcmp(folderList,folderName);
+rdIndex=find(boolList);
+fileOb(rdIndex)=[];
+for index=1:length(rdIndex)
+    [rIndex,~]=find(indexList(:,1)==rdIndex(index));
+    indexList(rIndex,:)=[];
+    [rIndex,~]=find(indexList(:,2)==rdIndex(index));
+    indexList(rIndex,:)=[];
+end
+oldIndex=setdiff(rdIndex(1):length(folderList),rdIndex);
+newIndex=rdIndex(1)-1+1:length(oldIndex);
+for index=1:length(oldIndex)
+    indexList(indexList==oldIndex(index))=newIndex(index);
+end
+flagRd2=1;
 end
